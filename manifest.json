@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Prompter",
+  "version": "1.0.0",
+  "description": "Store and auto-input prompts into AI chat models.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "favicon_io/icon16.png",
+      "32": "favicon_io/icon32.png"
+    }
+  },
+  "icons": {
+    "16": "favicon_io/icon16.png",
+    "32": "favicon_io/icon32.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chat.openai.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+} 
