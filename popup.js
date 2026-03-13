@@ -29,6 +29,21 @@ async function renderPrompts() {
     textSpan.onclick = () => sendPrompt(prompt);
     li.appendChild(textSpan);
 
+    // Copy to clipboard button
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = '📋';
+    copyBtn.className = 'copy-btn';
+    copyBtn.title = 'Copy prompt to clipboard';
+    copyBtn.onclick = async (e) => {
+      e.stopPropagation();
+      try {
+        await navigator.clipboard.writeText(prompt);
+      } catch (err) {
+        console.error('Failed to copy prompt to clipboard:', err);
+      }
+    };
+    li.appendChild(copyBtn);
+
     // Edit button
     const editBtn = document.createElement('button');
     editBtn.textContent = '✏️';
