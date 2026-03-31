@@ -26,40 +26,42 @@ async function renderPrompts() {
     const textSpan = document.createElement('span');
     textSpan.textContent = prompt;
     textSpan.className = 'prompt-text';
-    textSpan.onclick = () => sendPrompt(prompt);
+    textSpan.title = 'Click to copy';
+    textSpan.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(prompt);
+        showToast('Copied to clipboard! ✅');
+      } catch (err) {
+        console.error('Failed to copy code:', err);
+      }
+    };
     li.appendChild(textSpan);
 
-    // Copy to clipboard button
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'item-actions';
+
+    // Copy Button
     const copyBtn = document.createElement('button');
     copyBtn.textContent = '📋';
     copyBtn.className = 'copy-btn';
-    copyBtn.title = 'Copy prompt to clipboard';
     copyBtn.onclick = async (e) => {
       e.stopPropagation();
-      try {
-        await navigator.clipboard.writeText(prompt);
-      } catch (err) {
-        console.error('Failed to copy prompt to clipboard:', err);
-      }
+      await navigator.clipboard.writeText(prompt);
+      showToast('Copied to clipboard! ✅');
     };
-    li.appendChild(copyBtn);
+    actionsDiv.appendChild(copyBtn);
 
-    // Edit button
+    // Edit Button
     const editBtn = document.createElement('button');
     editBtn.textContent = '✏️';
     editBtn.className = 'edit-btn';
-    editBtn.onclick = async (e) => {
+    editBtn.onclick = (e) => {
       e.stopPropagation();
-      const newPrompt = promptEdit(prompt);
-      if (newPrompt !== null && newPrompt.trim() !== '') {
-        prompts[idx] = newPrompt.trim();
-        await savePrompts(prompts);
-        renderPrompts();
-      }
+      toggleEditMode(li, prompt, idx, prompts);
     };
-    li.appendChild(editBtn);
+    actionsDiv.appendChild(editBtn);
 
-    // Delete button
+    // Delete Button
     const delBtn = document.createElement('button');
     delBtn.textContent = '🗑️';
     delBtn.className = 'delete-btn';
@@ -69,47 +71,82 @@ async function renderPrompts() {
       await savePrompts(prompts);
       renderPrompts();
     };
-    li.appendChild(delBtn);
+    actionsDiv.appendChild(delBtn);
 
+    li.appendChild(actionsDiv);
     list.appendChild(li);
   });
 }
 
+function toggleEditMode(li, oldPrompt, idx, prompts) {
+  li.innerHTML = '';
+  li.classList.add('editing');
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = oldPrompt;
+  input.className = 'edit-input';
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter') saveBtn.click();
+    if (e.key === 'Escape') renderPrompts();
+  };
+  li.appendChild(input);
+
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = '✅';
+  saveBtn.className = 'save-edit-btn';
+  saveBtn.onclick = async () => {
+    const newVal = input.value.trim();
+    if (newVal) {
+      prompts[idx] = newVal;
+      await savePrompts(prompts);
+    }
+    renderPrompts();
+  };
+  li.appendChild(saveBtn);
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = '❌';
+  cancelBtn.className = 'cancel-edit-btn';
+  cancelBtn.onclick = () => renderPrompts();
+  li.appendChild(cancelBtn);
+
+  input.focus();
+}
+
+
 // Add prompt
-document.getElementById('savePromptBtn').onclick = async () => {
-  const input = document.getElementById('promptInput');
-  const prompt = input.value.trim();
+const saveBtn = document.getElementById('savePromptBtn');
+const promptInput = document.getElementById('promptInput');
+
+saveBtn.onclick = async () => {
+  const prompt = promptInput.value.trim();
   if (!prompt) return;
   const prompts = await getPrompts();
   prompts.push(prompt);
   await savePrompts(prompts);
-  input.value = '';
+  promptInput.value = '';
   renderPrompts();
 };
 
-// Edit prompt (inline prompt)
-function promptEdit(oldPrompt) {
-  return prompt('Edit prompt:', oldPrompt);
-}
-
-// Close sidebar
-document.getElementById('closeSidebarBtn').onclick = () => {
-  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-    if (tabs && tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleSidebar' });
-    }
-  });
+// Enter key to add prompt
+promptInput.onkeydown = (e) => {
+  if (e.key === 'Enter') {
+    saveBtn.click();
+  }
 };
 
-// Send prompt to content script
-function sendPrompt(prompt) {
-  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-    if (tabs && tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'inputPrompt', prompt });
-    } else {
-      console.error('No active tab found.');
-    }
-  });
+// Toast notification function
+function showToast(message) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.className = 'show';
+  setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 2000);
 }
 
 // Initial render

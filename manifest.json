@@ -3,9 +3,12 @@
   "name": "Prompter",
   "version": "1.0.0",
   "description": "Store and auto-input prompts into AI chat models.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "sidePanel"],
   "background": {
     "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "popup.html"
   },
   "action": {
     "default_icon": {
@@ -19,23 +22,8 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "matches": ["<all_urls>"],
       "js": ["content.js"]
-    }
-  ],
-  "commands": {
-    "toggle-sidebar": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+P",
-        "mac": "Command+Shift+P"
-      },
-      "description": "Toggle the Prompter sidebar"
-    }
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["popup.html", "popup.js", "styles.css"],
-      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"]
     }
   ]
 } 
