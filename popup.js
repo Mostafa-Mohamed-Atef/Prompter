@@ -92,12 +92,25 @@ function promptEdit(oldPrompt) {
   return prompt('Edit prompt:', oldPrompt);
 }
 
+// Close sidebar
+document.getElementById('closeSidebarBtn').onclick = () => {
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+    if (tabs && tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleSidebar' });
+    }
+  });
+};
+
 // Send prompt to content script
 function sendPrompt(prompt) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { action: 'inputPrompt', prompt });
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+    if (tabs && tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'inputPrompt', prompt });
+    } else {
+      console.error('No active tab found.');
+    }
   });
 }
 
 // Initial render
-renderPrompts(); 
+renderPrompts();
