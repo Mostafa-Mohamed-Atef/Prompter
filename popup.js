@@ -115,7 +115,7 @@ function toggleEditMode(li, oldPrompt, idx, prompts) {
 }
 
 
-// Add prompt
+// Add prompt logic
 const saveBtn = document.getElementById('savePromptBtn');
 const promptInput = document.getElementById('promptInput');
 
